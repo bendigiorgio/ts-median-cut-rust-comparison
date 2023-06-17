@@ -1,16 +1,18 @@
+"use client";
+import ReqCard from "@/components/ReqCard";
 import RustForm from "@/components/RustForm";
 import TsForm from "@/components/TsForm";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useResultStore } from "@/stores/resultStore";
+import Image from "next/image";
+import { useState } from "react";
 
 export default function Home() {
+  const [openTab, setOpenTab] = useState<"rust" | "typescript">("rust");
+  const results = useResultStore();
   return (
     <section className="space-y-8">
       <div className="max-w-2xl">
@@ -27,8 +29,16 @@ export default function Home() {
       <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
         Playground
       </h2>
-      <div className="grid grid-cols-2 gap-x-4">
-        <Tabs defaultValue="rust" className="w-[400px]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Tabs
+          onValueChange={(e) => {
+            if (e === "rust" || e === "typescript") {
+              setOpenTab(e);
+            }
+          }}
+          defaultValue="rust"
+          className="lg:w-[400px]"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="rust">Rust</TabsTrigger>
             <TabsTrigger value="typescript">Typescript (Next.js)</TabsTrigger>
@@ -40,15 +50,44 @@ export default function Home() {
             <TsForm />
           </TabsContent>
         </Tabs>
-        <div>
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Response</CardTitle>
-              <Separator />
-            </CardHeader>
-            <CardContent className="space-y-2"></CardContent>
-          </Card>
-        </div>
+
+        <Card className="h-full lg:w-[400px]">
+          <CardHeader>
+            <CardTitle>Response</CardTitle>
+            <Separator />
+          </CardHeader>
+          <CardContent className="space-y-2 overflow-hidden">
+            {openTab === "rust" ? (
+              results.rustLoading ? (
+                <div className="h-[87.5px] w-[350px] animate-pulse rounded-md bg-muted"></div>
+              ) : (
+                results.rustResult && (
+                  <AspectRatio ratio={16 / 4}>
+                    <Image
+                      fill
+                      alt="Rust Result"
+                      src={results.rustResult}
+                      className="object-contain"
+                    />
+                  </AspectRatio>
+                )
+              )
+            ) : (
+              results.tsResult && (
+                <AspectRatio ratio={16 / 4}>
+                  <Image
+                    fill
+                    alt="Rust Result"
+                    src={results.tsResult}
+                    className="object-contain"
+                  />
+                </AspectRatio>
+              )
+            )}
+          </CardContent>
+        </Card>
+
+        <ReqCard tab={openTab} />
       </div>
       <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
         Benchmarking

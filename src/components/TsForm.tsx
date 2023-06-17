@@ -8,6 +8,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "./ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,28 +23,27 @@ import {
   CardTitle,
 } from "./ui/card";
 import { useToast } from "./ui/use-toast";
-
-const formSchema = z.object({
-  link: z
-    .string()
-    .url()
-    .refine((v) => v.endsWith(".png") || v.endsWith(".jpg"), {
-      message: "Currently only supports .png or .jpg",
-    }),
-  iterations: z.number().int().positive(),
-});
+import { formSchema } from "./RustForm";
+import { useState } from "react";
 
 const TsForm = () => {
   const { toast } = useToast();
   const urlStore = useUrlStore();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      endpoint:
+        urlStore.tsEndpoint ??
+        "http://127.0.0.1:3000/make_palette_image?id=1234",
+      iterations: urlStore.tsIterations ?? 4,
+      link: urlStore.tsUrl ?? "",
+    },
   });
-
+  const [editEndPoint, setEditEndPoint] = useState(false);
   const handlePaste = () => {
-    if (urlStore.url && urlStore.iterations) {
-      form.setValue("link", urlStore.url);
-      form.setValue("iterations", urlStore.iterations);
+    if (urlStore.tsUrl && urlStore.tsIterations) {
+      form.setValue("link", urlStore.tsUrl);
+      form.setValue("iterations", urlStore.tsIterations);
     } else {
       toast({
         title: "No previous values",
@@ -53,8 +53,15 @@ const TsForm = () => {
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    urlStore.setUrl(values.link);
-    urlStore.setIterations(values.iterations);
+    urlStore.setTsUrl(values.link);
+    urlStore.setTsIterations(values.iterations);
+    urlStore.setTsEndpoint(values.endpoint);
+
+    const test = JSON.stringify({
+      link: values.link,
+      iterations: values.iterations,
+    });
+    console.log(test);
   }
 
   return (
@@ -77,6 +84,7 @@ const TsForm = () => {
                   <FormControl>
                     <Input {...field}></Input>
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -87,21 +95,43 @@ const TsForm = () => {
                 <FormItem>
                   <FormLabel>Iterations</FormLabel>
                   <FormControl>
-                    <Input
-                      min={1}
-                      defaultValue={4}
-                      type="number"
-                      {...field}
-                    ></Input>
+                    <Input min={1} type="number" {...field}></Input>
                   </FormControl>
                   <FormDescription>
                     This will determine the number of images you get in
                     response. The number of images will be{" "}
                     <span className="font-bold">iterations&#178;</span>
                   </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />
+            <div className="flex flex-row items-end justify-end space-x-2">
+              {editEndPoint && (
+                <FormField
+                  control={form.control}
+                  name="endpoint"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>API Endpoint</FormLabel>
+                      <FormControl>
+                        <Input {...field}></Input>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={() => {
+                  setEditEndPoint(!editEndPoint);
+                }}
+              >
+                Endpoint
+              </Button>
+            </div>
             <div className="flex flex-row items-center justify-between">
               <Button type="submit">Submit</Button>
               <Button
