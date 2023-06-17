@@ -25,6 +25,8 @@ This can be run with the command:
 
     cargo run
 
+Cors is enabled for localhost:3000 in the Rust API.
+
 ## Preview
 
 ![Dark Preview](./public/preview_d.png)
