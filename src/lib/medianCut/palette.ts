@@ -88,3 +88,18 @@ const quantization = (
     ...quantization(rgbData.slice(mid + 1), depth + 1),
   ];
 };
+
+export const medianCut = (imageData: ImageData, iterations: number) => {
+  const rgbData = buildRgb(imageData);
+  const palette = quantization(rgbData, 0, iterations);
+  return palette;
+};
+
+function componentToHex(c: number) {
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
+
+export const rgbToHex = ({ r, g, b }: RGB) => {
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+};

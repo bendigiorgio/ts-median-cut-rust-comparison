@@ -4,6 +4,7 @@ import RustForm from "@/components/RustForm";
 import TsForm from "@/components/TsForm";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useResultStore } from "@/stores/resultStore";
@@ -37,7 +38,7 @@ export default function Home() {
             }
           }}
           defaultValue="rust"
-          className="lg:w-[400px]"
+          className="h-[506px] lg:w-[400px]"
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="rust">Rust</TabsTrigger>
@@ -51,39 +52,53 @@ export default function Home() {
           </TabsContent>
         </Tabs>
 
-        <Card className="h-full lg:w-[400px]">
+        <Card className="h-[506px] lg:w-[400px]">
           <CardHeader>
             <CardTitle>Response</CardTitle>
             <Separator />
           </CardHeader>
-          <CardContent className="space-y-2 overflow-hidden">
-            {openTab === "rust" ? (
-              results.rustLoading ? (
+          <CardContent className="flex space-y-2 overflow-hidden">
+            <ScrollArea className="flex h-[400px] w-full">
+              {openTab === "rust" ? (
+                results.rustLoading || !results.rustResult ? (
+                  <div className="h-[87.5px] w-[350px] animate-pulse rounded-md bg-muted"></div>
+                ) : (
+                  <div className="max-w-[350px]">
+                    {results.rustResult.url && (
+                      <AspectRatio ratio={16 / 4}>
+                        <Image
+                          fill
+                          alt="Rust Result"
+                          src={results.rustResult.url}
+                          className="object-contain"
+                        />
+                      </AspectRatio>
+                    )}
+                    <pre className="flex h-full flex-col overflow-x-scroll rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background scrollbar-hide placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                      {JSON.stringify(results.rustResult, null, 2)}
+                    </pre>
+                  </div>
+                )
+              ) : results.tsLoading || !results.tsResult ? (
                 <div className="h-[87.5px] w-[350px] animate-pulse rounded-md bg-muted"></div>
               ) : (
-                results.rustResult && (
-                  <AspectRatio ratio={16 / 4}>
-                    <Image
-                      fill
-                      alt="Rust Result"
-                      src={results.rustResult}
-                      className="object-contain"
-                    />
-                  </AspectRatio>
-                )
-              )
-            ) : (
-              results.tsResult && (
-                <AspectRatio ratio={16 / 4}>
-                  <Image
-                    fill
-                    alt="Rust Result"
-                    src={results.tsResult}
-                    className="object-contain"
-                  />
-                </AspectRatio>
-              )
-            )}
+                <div className="max-w-[350px]">
+                  {results.tsResult.url && (
+                    <AspectRatio ratio={16 / 4}>
+                      <Image
+                        fill
+                        alt="Ts Result"
+                        src={results.tsResult.url}
+                        className="object-contain"
+                      />
+                    </AspectRatio>
+                  )}
+                  <pre className="flex h-full flex-col overflow-x-scroll rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background scrollbar-hide placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                    {JSON.stringify(results.tsResult, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </ScrollArea>
           </CardContent>
         </Card>
 

@@ -24,7 +24,8 @@ import {
 } from "./ui/card";
 import { useToast } from "./ui/use-toast";
 import { useState } from "react";
-import { useResultStore } from "@/stores/resultStore";
+import { ResponseType, useResultStore } from "@/stores/resultStore";
+import useTimer from "@/lib/useExecutionTimer";
 
 export const formSchema = z.object({
   link: z
@@ -45,6 +46,7 @@ const RustForm = () => {
   const { toast } = useToast();
   const urlStore = useUrlStore();
   const resultStore = useResultStore();
+  const executionTimer = useTimer();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,6 +76,8 @@ const RustForm = () => {
     urlStore.setRustIterations(values.iterations);
     urlStore.setRustEndpoint(values.endpoint);
     resultStore.setRustLoading(true);
+    executionTimer.start();
+
     const response = await fetch(values.endpoint, {
       method: "POST",
       body: JSON.stringify({
@@ -82,33 +86,12 @@ const RustForm = () => {
       }),
     });
 
-    const reader = response.body?.getReader();
-    const chunks: Uint8Array[] = [];
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-          break;
-        }
-
-        if (value) {
-          chunks.push(value);
-        }
-      }
+    const json = (await response.json()) as ResponseType;
+    if (json) {
+      resultStore.setRustResult(json);
+      resultStore.setRustLoading(false);
     }
-    const concatenatedChunks = new Uint8Array(
-      chunks.reduce((acc, chunk) => acc + chunk.length, 0)
-    );
-    let position = 0;
-    for (const chunk of chunks) {
-      concatenatedChunks.set(chunk, position);
-      position += chunk.length;
-    }
-    const blob = new Blob([concatenatedChunks], { type: "image/png" });
-    const imageUrl = URL.createObjectURL(blob);
-    resultStore.setRustResult(imageUrl);
-    resultStore.setRustLoading(false);
+    resultStore.setRustTime(executionTimer.end());
   };
 
   return (
