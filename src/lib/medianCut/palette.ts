@@ -103,3 +103,7 @@ function componentToHex(c: number) {
 export const rgbToHex = ({ r, g, b }: RGB) => {
   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 };
+
+export const convertPaletteToHex = (palette: RGB[]) => {
+  return palette.map((color) => rgbToHex(color));
+};
