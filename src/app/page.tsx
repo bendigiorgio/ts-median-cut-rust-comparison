@@ -93,6 +93,16 @@ export default function Home() {
                       />
                     </AspectRatio>
                   )}
+                  <div className="flex h-fit flex-row py-6">
+                    {results.tsResult.colors.map((color) => (
+                      <div
+                        className={`h-6 w-6`}
+                        style={{ backgroundColor: color }}
+                        key={color}
+                      ></div>
+                    ))}
+                  </div>
+
                   <pre className="flex h-full flex-col overflow-x-scroll rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background scrollbar-hide placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                     {JSON.stringify(results.tsResult, null, 2)}
                   </pre>

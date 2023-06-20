@@ -25,16 +25,20 @@ import {
 import { useToast } from "./ui/use-toast";
 import { formSchema } from "./RustForm";
 import { useState } from "react";
+import { useResultStore } from "@/stores/resultStore";
+import useTimer from "@/lib/useExecutionTimer";
+import { convertPaletteToHex, medianCut } from "@/lib/medianCut/palette";
+import { extractData } from "@/lib/medianCut/getImageData";
 
 const TsForm = () => {
   const { toast } = useToast();
   const urlStore = useUrlStore();
+  const resultStore = useResultStore();
+  const executionTimer = useTimer();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      endpoint:
-        urlStore.tsEndpoint ??
-        "http://127.0.0.1:3000/make_palette_image?id=1234",
+      endpoint: urlStore.tsEndpoint ?? "http://127.0.0.1:3000/api/make_palette",
       iterations: urlStore.tsIterations ?? 4,
       link: urlStore.tsUrl ?? "",
     },
@@ -52,17 +56,39 @@ const TsForm = () => {
     }
   };
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     urlStore.setTsUrl(values.link);
     urlStore.setTsIterations(values.iterations);
     urlStore.setTsEndpoint(values.endpoint);
+    resultStore.setTsLoading(true);
+    executionTimer.start();
 
-    const test = JSON.stringify({
-      link: values.link,
-      iterations: values.iterations,
-    });
-    console.log(test);
-  }
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.src = values.link;
+    img.crossOrigin = "Anonymous";
+
+    if (!ctx) throw new Error("Could not get context");
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      const palette = medianCut(imageData, values.iterations);
+      if (palette) {
+        resultStore.setTsResult({
+          colors: convertPaletteToHex(palette),
+          internal_time: executionTimer.end(),
+        });
+        resultStore.setTsLoading(false);
+        resultStore.setTsTime(executionTimer.end());
+      }
+    };
+  };
 
   return (
     <Card>
@@ -123,6 +149,7 @@ const TsForm = () => {
                 />
               )}
               <Button
+                disabled
                 variant="ghost"
                 type="button"
                 onClick={() => {

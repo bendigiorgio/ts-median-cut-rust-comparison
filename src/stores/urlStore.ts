@@ -25,7 +25,7 @@ export const useUrlStore = create<UrlStore>((set) => ({
 
   tsUrl: "",
   tsIterations: 4,
-  tsEndpoint: "http://127.0.0.1:8000/make_palette_image?id=1234",
+  tsEndpoint: "http://127.0.0.1:3000/api/make_palette",
   setTsUrl: (tsUrl) => set({ tsUrl }),
   setTsIterations: (tsIterations) => set({ tsIterations }),
   setTsEndpoint: (tsEndpoint) => set({ tsEndpoint }),
